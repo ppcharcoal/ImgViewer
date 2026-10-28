@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' imgv: blob: data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'; connect-src imgv:">
+  <title>ImgViewer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="mode-home">
+  <header id="titlebar">
+    <div class="tb-left">
+      <button id="btn-home" class="tb-btn only-viewer" title="Back to start (Esc)" data-icon="back"></button>
+      <div class="brand only-home"><img src="icon.png" alt=""><span>ImgViewer</span></div>
+    </div>
+    <div class="tb-center only-viewer">
+      <span id="tb-name"></span>
+      <span id="tb-count"></span>
+    </div>
+    <div class="tb-right">
+      <span id="tb-meta" class="only-viewer"></span>
+      <button id="btn-settings" class="tb-btn" title="Settings" data-icon="settings"></button>
+    </div>
+  </header>
+
+  <main>
+    <!-- start screen -->
+    <section id="home">
+      <div id="empty" class="empty">
+        <div class="empty-art"><img src="icon.png" alt=""></div>
+        <h1>Open an image</h1>
+        <p>or drop one anywhere in this window</p>
+        <button class="btn-primary js-open"><span data-icon="folder"></span>Open image<kbd>Ctrl O</kbd></button>
+        <p class="formats" id="formats"></p>
+      </div>
+
+      <div id="recent" class="recent" hidden>
+        <div class="open-bar">
+          <div>
+            <h1>Recent</h1>
+            <p id="recent-sub"></p>
+          </div>
+          <div class="open-actions">
+            <button class="btn-ghost" id="btn-clear">Clear</button>
+            <button class="btn-primary js-open"><span data-icon="folder"></span>Open image<kbd>Ctrl O</kbd></button>
+          </div>
+        </div>
+        <div id="grid" class="grid"></div>
+      </div>
+    </section>
+
+    <!-- viewer -->
+    <section id="viewer">
+      <div id="stage"></div>
+      <div id="spinner" class="spinner" hidden></div>
+      <div id="error" class="error" hidden>
+        <span data-icon="broken"></span>
+        <h2>Can't show this image</h2>
+        <p id="error-text"></p>
+      </div>
+      <button class="nav prev" id="btn-prev" title="Previous (←)" data-icon="chevron-left"></button>
+      <button class="nav next" id="btn-next" title="Next (→)" data-icon="chevron-right"></button>
+
+      <div id="toolbar" class="toolbar">
+        <button id="tb-prev" title="Previous (←)" data-icon="arrow-left"></button>
+        <button id="tb-next" title="Next (→)" data-icon="arrow-right"></button>
+        <span class="sep"></span>
+        <button id="tb-zoom-out" title="Zoom out (−)" data-icon="minus"></button>
+        <button id="tb-zoom" class="zoom-label" title="Toggle fit / 100% (double-click image)">100%</button>
+        <button id="tb-zoom-in" title="Zoom in (+)" data-icon="plus"></button>
+        <button id="tb-fit" title="Fit to window (0)" data-icon="fit"></button>
+        <span class="sep"></span>
+        <button id="tb-rotate" title="Rotate (R)" data-icon="rotate"></button>
+        <button id="tb-full" title="Full screen (F11)" data-icon="expand"></button>
+        <button id="tb-more" title="More" data-icon="more"></button>
+      </div>
+
+      <div id="more-menu" class="menu" hidden>
+        <button data-act="folder"><span data-icon="folder"></span>Show in folder</button>
+        <button data-act="copy"><span data-icon="copy"></span>Copy image<kbd>Ctrl C</kbd></button>
+        <button data-act="copy-path"><span data-icon="link"></span>Copy file path</button>
+        <hr>
+        <button data-act="delete" class="danger"><span data-icon="trash"></span>Delete<kbd>Del</kbd></button>
+      </div>
+    </section>
+  </main>
+
+  <!-- settings -->
+  <div id="settings" class="sheet-wrap" hidden>
+    <div class="sheet">
+      <div class="sheet-head">
+        <h2>Settings</h2>
+        <button class="tb-btn" id="settings-close" data-icon="close" title="Close"></button>
+      </div>
+      <div class="row" id="row-default">
+        <div>
+          <h3>Default image viewer</h3>
+          <p id="default-text">Open photos with ImgViewer when you double-click them.</p>
+        </div>
+        <button class="btn-secondary" id="btn-make-default">Make default</button>
+      </div>
+      <div class="row">
+        <div>
+          <h3>Recent files</h3>
+          <p id="history-text">Nothing yet.</p>
+        </div>
+        <button class="btn-secondary" id="btn-clear-2">Clear</button>
+      </div>
+      <div class="row">
+        <div>
+          <h3>Welcome tour</h3>
+          <p>Run the first-time setup again.</p>
+        </div>
+        <button class="btn-secondary" id="btn-setup-again">Open</button>
+      </div>
+      <p class="about" id="about"></p>
+    </div>
+  </div>
+
+  <!-- first-run setup -->
+  <div id="setup" class="setup-wrap" hidden>
+    <div class="setup">
+      <div class="setup-step" data-step="welcome">
+        <img class="setup-logo" src="icon.png" alt="">
+        <h1>Welcome to ImgViewer</h1>
+        <p>A quick, clean way to look at your pictures. Let's get you set up — it takes a few seconds.</p>
+        <div class="setup-actions">
+          <button class="btn-primary" data-next>Get started</button>
+        </div>
+      </div>
+
+      <div class="setup-step" data-step="default" hidden>
+        <div class="setup-badge" data-icon="star"></div>
+        <h1>Make it your default?</h1>
+        <p>Then double-clicking a photo anywhere in Windows opens it right here.</p>
+        <ol class="setup-how">
+          <li>Click <b>Make ImgViewer default</b> below.</li>
+          <li>Windows opens <b>Default apps</b> for ImgViewer.</li>
+          <li>Click <b>Set default</b> at the top of that page — done.</li>
+        </ol>
+        <div class="setup-status" id="setup-status" hidden></div>
+        <div class="setup-actions">
+          <button class="btn-ghost" data-next>Not now</button>
+          <button class="btn-primary" id="setup-make-default">Make ImgViewer default</button>
+        </div>
+      </div>
+
+      <div class="setup-step" data-step="tips" hidden>
+        <div class="setup-badge" data-icon="sparkle"></div>
+        <h1>You're all set</h1>
+        <div class="tips">
+          <div><kbd>Scroll</kbd><span>Smooth zoom</span></div>
+          <div><kbd>← →</kbd><span>Browse the folder</span></div>
+          <div><kbd>Double-click</kbd><span>Fit ↔ 100%</span></div>
+          <div><kbd>Drag</kbd><span>Move around</span></div>
+          <div><kbd>F11</kbd><span>Full screen</span></div>
+          <div><kbd>R</kbd><span>Rotate</span></div>
+        </div>
+        <div class="setup-actions">
+          <button class="btn-primary" data-finish>Start viewing</button>
+        </div>
+      </div>
+      <div class="setup-dots" id="setup-dots"></div>
+    </div>
+  </div>
+
+  <div id="drop" class="drop" hidden><div><span data-icon="image"></span>Drop to open</div></div>
+  <div id="toasts" class="toasts"></div>
+
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

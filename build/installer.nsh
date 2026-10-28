@@ -1,0 +1,57 @@
+; Extra installer steps for ImgViewer (included by electron-builder).
+; The app registers itself with Windows on first launch (HKCU, no admin needed);
+; the uninstaller removes that registration again.
+
+!macro customUnInstall
+  ; keep the registration when this is just an update
+  ${ifNot} ${isUpdated}
+  DeleteRegKey HKCU "Software\Classes\ImgViewer.Image"
+  DeleteRegKey HKCU "Software\Classes\Applications\ImgViewer.exe"
+  DeleteRegKey HKCU "Software\ImgViewer"
+  DeleteRegValue HKCU "Software\RegisteredApplications" "ImgViewer"
+  DeleteRegValue HKCU "Software\Classes\.jpg\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.jpeg\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.jpe\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.jfif\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.pjpeg\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.pjp\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.png\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.apng\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.gif\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.webp\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.avif\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.bmp\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.dib\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.ico\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.cur\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.svg\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.tif\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.tiff\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.heic\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.heif\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.hif\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.jxl\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.dng\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.cr2\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.cr3\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.nef\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.nrw\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.arw\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.srf\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.sr2\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.orf\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.rw2\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.raf\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.pef\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.srw\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.x3f\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.3fr\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.erf\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.kdc\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.mrw\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.raw\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.rwl\OpenWithProgids" "ImgViewer.Image"
+  DeleteRegValue HKCU "Software\Classes\.iiq\OpenWithProgids" "ImgViewer.Image"
+  System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, p 0, p 0)'
+  ${endIf}
+!macroend
