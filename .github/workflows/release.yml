@@ -1,7 +1,10 @@
 name: Build & release
 
+# Every push to main builds the installer. When package.json has a version that
+# has no release yet, a release "v<version>" is created with the installer attached.
 on:
   push:
+    branches: [main]
     tags: ['v*']
   workflow_dispatch:
 
@@ -34,18 +37,24 @@ jobs:
           path: dist/ImgViewer-Setup-*.exe
 
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v$VERSION"
           FILE=$(ls dist/ImgViewer-Setup-*.exe)
-          NOTES="Download **$(basename "$FILE")**, run it, and ImgViewer installs and opens — no admin rights needed.
-
-          Windows may show a SmartScreen warning because the installer isn't code-signed yet: click **More info → Run anyway**."
           if gh release view "$TAG" >/dev/null 2>&1; then
+            if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$GITHUB_REF_TYPE" = "branch" ]; then
+              echo "Release $TAG already exists; bump the version in package.json to publish a new one."
+              exit 0
+            fi
             gh release upload "$TAG" "$FILE" --clobber
           else
-            gh release create "$TAG" "$FILE" --title "ImgViewer ${TAG#v}" --notes "$NOTES"
+            cat > notes.md <<NOTES
+          Download **$(basename "$FILE")** below, run it, and ImgViewer installs and opens — no admin rights needed.
+
+          Windows may show a SmartScreen warning because the installer isn't code-signed: click **More info → Run anyway**.
+          NOTES
+            gh release create "$TAG" "$FILE" --target "$GITHUB_SHA" --title "ImgViewer $VERSION" --notes-file notes.md
           fi

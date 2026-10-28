@@ -42,6 +42,6 @@ npm start          # run in development
 npm run dist       # build the Windows installer into dist/
 ```
 
-Pushing a tag like `v1.0.1` makes GitHub Actions build the installer and publish it as a release.
+Every push to `main` builds the installer on GitHub Actions; bumping `version` in package.json publishes it as a new release.
 
 The installer isn't code-signed, so Windows SmartScreen may warn on first run — choose **More info → Run anyway**.
