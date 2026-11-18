@@ -12,6 +12,7 @@
 - **Smooth zoom** — scroll to zoom toward the cursor, double-click to jump between fit and 100%, drag to move, pinch on touchpads and touch screens.
 - **Recent files** — the start screen shows what you opened lately, with thumbnails.
 - **First-time setup** — offers to make ImgViewer your default image viewer on Windows.
+- **Print** — Ctrl+P (or ⋯ → Print) opens the Windows print dialog with the picture fitted to the page, turned to landscape automatically for wide photos.
 - Rotate, full screen, copy image, show in folder, move to Recycle Bin.
 
 ## Keyboard
@@ -26,6 +27,7 @@
 | R / Shift+R | Rotate |
 | F or F11 | Full screen |
 | Ctrl+O | Open |
+| Ctrl+P | Print |
 | Ctrl+C | Copy image |
 | Delete | Move to Recycle Bin |
 | Esc | Leave full screen / back to start |

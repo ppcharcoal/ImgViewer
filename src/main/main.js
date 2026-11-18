@@ -267,6 +267,43 @@ handle('trash', async (file) => {
   await shell.trashItem(file);
   return true;
 });
+// Print: the picture (already rotated as shown) goes into a hidden page that fits it
+// to the paper, then the normal system print dialog opens for that page.
+let printing = false;
+handle('print', async ({ data, mime, width, height, name }) => {
+  if (printing || !win) return { ok: false, reason: 'busy' };
+  printing = true;
+  const dir = await fsp.mkdtemp(path.join(app.getPath('temp'), 'imgviewer-print-'));
+  const imgFile = path.join(dir, mime === 'image/png' ? 'image.png' : 'image.jpg');
+  const page = path.join(dir, 'print.html');
+  const landscape = width > height;
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let pw = null;
+  try {
+    await fsp.writeFile(imgFile, Buffer.from(data));
+    await fsp.writeFile(page, `<!doctype html><html><head><meta charset="utf-8"><title>${esc(name)}</title><style>
+@page { margin: 10mm; }
+html, body { margin: 0; height: 100%; background: #fff; }
+body { display: flex; align-items: center; justify-content: center; }
+img { display: block; max-width: 100%; max-height: 100vh; width: auto; height: auto; object-fit: contain; }
+</style></head><body><img src="${path.basename(imgFile)}"></body></html>`);
+    pw = new BrowserWindow({ show: false, parent: win, webPreferences: { sandbox: true, contextIsolation: true, javascript: true } });
+    await pw.loadFile(page);
+    await pw.webContents.executeJavaScript('document.images[0].decode().then(() => true, () => false)');
+    const result = await new Promise((resolve) => {
+      pw.webContents.print({ silent: false, printBackground: true, landscape, margins: { marginType: 'default' } },
+        (ok, reason) => resolve({ ok, reason }));
+    });
+    return result.ok ? { ok: true } : { ok: false, reason: result.reason || 'failed' };
+  } catch (e) {
+    return { ok: false, reason: String((e && e.message) || e) };
+  } finally {
+    printing = false;
+    if (pw && !pw.isDestroyed()) pw.destroy();
+    fsp.rm(dir, { recursive: true, force: true }).catch(() => {});
+  }
+});
+
 handle('copy-image', (dataUrl) => { clipboard.writeImage(nativeImage.createFromDataURL(dataUrl)); return true; });
 handle('copy-text', (t) => { clipboard.writeText(String(t)); return true; });
 handle('fullscreen', (on) => { if (win) win.setFullScreen(on === undefined ? !win.isFullScreen() : !!on); return win && win.isFullScreen(); });

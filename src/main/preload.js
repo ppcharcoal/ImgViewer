@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('iv', {
   showInFolder: call('show-in-folder'),
   trash: call('trash'),
   copyImage: call('copy-image'),
+  print: call('print'),
   copyText: call('copy-text'),
   fullscreen: call('fullscreen'),
   setTitle: call('set-title'),

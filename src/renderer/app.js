@@ -584,6 +584,41 @@ const view = (() => {
 })();
 
 // ---------------------------------------------------------------- actions
+// Draws the picture the way it's shown (rotation included) and sends it to print.
+let printBusy = false;
+async function printImage() {
+  const c = state.current;
+  if (!c || !c.el || printBusy) return;
+  printBusy = true;
+  try {
+    const quarter = ((view.rotation % 4) + 4) % 4;
+    const turned = quarter % 2 === 1;
+    // keep it sharp on paper but bounded in size (~ 600 dpi on A4/Letter)
+    const scale = Math.min(1, 7000 / Math.max(c.w, c.h));
+    const w = Math.max(1, Math.round(c.w * scale)), h = Math.max(1, Math.round(c.h * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = turned ? h : w;
+    canvas.height = turned ? w : h;
+    const ctx = canvas.getContext('2d');
+    const alpha = c.el.classList.contains('alpha');
+    if (!alpha) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+    ctx.imageSmoothingQuality = 'high';
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(quarter * Math.PI / 2);
+    ctx.drawImage(c.el, -w / 2, -h / 2, w, h);
+    const mime = alpha ? 'image/png' : 'image/jpeg';
+    const blob = await new Promise((res) => canvas.toBlob(res, mime, 0.95));
+    if (!blob) throw new Error('render failed');
+    const data = new Uint8Array(await blob.arrayBuffer());
+    const r = await iv.print({ data, mime, width: canvas.width, height: canvas.height, name: basename(c.path) });
+    if (!r.ok && r.reason !== 'cancelled' && r.reason !== 'busy') toast("Couldn't print this image");
+  } catch {
+    toast("Couldn't print this image");
+  } finally {
+    printBusy = false;
+  }
+}
+
 async function copyImage() {
   const c = state.current;
   if (!c || !c.el) return;
@@ -657,6 +692,7 @@ $('#more-menu').addEventListener('click', (e) => {
   const act = b.dataset.act;
   if (act === 'folder') iv.showInFolder(state.current.path);
   if (act === 'copy') copyImage();
+  if (act === 'print') printImage();
   if (act === 'copy-path') { iv.copyText(state.current.path); toast('Path copied'); }
   if (act === 'delete') deleteCurrent();
 });
@@ -700,6 +736,7 @@ window.addEventListener('keydown', (e) => {
   if (state.mode !== 'viewer') return;
 
   if (ctrl && k.toLowerCase() === 'c') { e.preventDefault(); copyImage(); return; }
+  if (ctrl && k.toLowerCase() === 'p') { e.preventDefault(); printImage(); return; }
   if (ctrl && (k === '=' || k === '+')) { e.preventDefault(); view.zoomBy(1.35); return; }
   if (ctrl && k === '-') { e.preventDefault(); view.zoomBy(1 / 1.35); return; }
   if (ctrl && k === '0') { e.preventDefault(); view.fit(); return; }
