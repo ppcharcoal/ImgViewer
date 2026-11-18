@@ -329,10 +329,18 @@ async function recordHistory(path, el, w, h) {
 // The picture is positioned by its centre (cx, cy) and scale s. Zooming moves a
 // target state; every frame the shown state eases toward it. Because s and the
 // centre are interpolated linearly together, the point under the cursor stays put.
+function updateMirrorButton(on) {
+  const b = $('#tb-mirror');
+  if (!b) return;
+  b.classList.toggle('on', on);
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  b.title = on ? 'Mirrored — click to undo (M)' : 'Mirror (M)';
+}
+
 const view = (() => {
   const stage = $('#stage');
-  const cur = { s: 1, cx: 0, cy: 0, r: 0 };
-  const tgt = { s: 1, cx: 0, cy: 0, r: 0 };
+  const cur = { s: 1, cx: 0, cy: 0, r: 0, fx: 1, fy: 1 };
+  const tgt = { s: 1, cx: 0, cy: 0, r: 0, fx: 1, fy: 1 };
   let rot = 0;          // target rotation in quarter turns (can go past 3)
   let fitMode = true;
   let raf = 0, last = 0;
@@ -355,7 +363,7 @@ const view = (() => {
   function apply() {
     const c = img();
     if (!c) return;
-    c.el.style.transform = `translate(${cur.cx}px, ${cur.cy}px) scale(${cur.s}) rotate(${cur.r}deg) translate(${-c.w / 2}px, ${-c.h / 2}px)`;
+    c.el.style.transform = `translate(${cur.cx}px, ${cur.cy}px) scale(${cur.s}) rotate(${cur.r}deg) scale(${cur.fx}, ${cur.fy}) translate(${-c.w / 2}px, ${-c.h / 2}px)`;
     c.el.classList.toggle('pixel', cur.s >= 3);
     const [w, h] = dims();
     stage.classList.toggle('can-pan', w * tgt.s > vw() + 1 || h * tgt.s > vh() + 1);
@@ -369,7 +377,9 @@ const view = (() => {
     cur.cx += (tgt.cx - cur.cx) * k;
     cur.cy += (tgt.cy - cur.cy) * k;
     cur.r += (tgt.r - cur.r) * k;
-    const done = Math.abs(tgt.s - cur.s) < tgt.s * 1e-4 && Math.abs(tgt.cx - cur.cx) < 0.1 && Math.abs(tgt.cy - cur.cy) < 0.1 && Math.abs(tgt.r - cur.r) < 0.05;
+    cur.fx += (tgt.fx - cur.fx) * k;
+    cur.fy += (tgt.fy - cur.fy) * k;
+    const done = Math.abs(tgt.s - cur.s) < tgt.s * 1e-4 && Math.abs(tgt.cx - cur.cx) < 0.1 && Math.abs(tgt.cy - cur.cy) < 0.1 && Math.abs(tgt.r - cur.r) < 0.05 && Math.abs(tgt.fx - cur.fx) < 0.002 && Math.abs(tgt.fy - cur.fy) < 0.002;
     if (done) Object.assign(cur, tgt);
     apply();
     if (done) {
@@ -424,6 +434,8 @@ const view = (() => {
     reset() {
       rot = 0;
       tgt.r = cur.r = 0;
+      tgt.fx = cur.fx = tgt.fy = cur.fy = 1;
+      updateMirrorButton(false);
       fitMode = true;
       tgt.s = fitScale();
       tgt.cx = vw() / 2; tgt.cy = vh() / 2;
@@ -451,6 +463,22 @@ const view = (() => {
       } else setScale(1, px, py);
     },
     toggleFit() { fitMode && img() ? setScale(1) : this.fit(); },
+    // Mirror left <-> right as seen on screen. After a quarter turn the picture's
+    // own x axis points up/down, so the other axis is the one to flip.
+    mirror() {
+      if (!img()) return;
+      if (((rot % 2) + 2) % 2) tgt.fy = -tgt.fy; else tgt.fx = -tgt.fx;
+      updateMirrorButton(tgt.fx * tgt.fy < 0);
+      animate();
+    },
+    // Upside down, as seen on screen.
+    flipVertical() {
+      if (!img()) return;
+      if (((rot % 2) + 2) % 2) tgt.fx = -tgt.fx; else tgt.fy = -tgt.fy;
+      updateMirrorButton(tgt.fx * tgt.fy < 0);
+      animate();
+    },
+    get flip() { return { x: tgt.fx, y: tgt.fy }; },
     rotate(dir = 1) {
       if (!img()) return;
       rot += dir;
@@ -605,6 +633,7 @@ async function printImage() {
     ctx.imageSmoothingQuality = 'high';
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate(quarter * Math.PI / 2);
+    ctx.scale(view.flip.x, view.flip.y);
     ctx.drawImage(c.el, -w / 2, -h / 2, w, h);
     const mime = alpha ? 'image/png' : 'image/jpeg';
     const blob = await new Promise((res) => canvas.toBlob(res, mime, 0.95));
@@ -710,6 +739,7 @@ $('#tb-zoom-out').addEventListener('click', () => view.zoomBy(1 / 1.35));
 $('#tb-zoom').addEventListener('click', () => view.toggleFit());
 $('#tb-fit').addEventListener('click', () => view.fit());
 $('#tb-rotate').addEventListener('click', () => view.rotate(1));
+$('#tb-mirror').addEventListener('click', () => view.mirror());
 $('#tb-full').addEventListener('click', () => iv.fullscreen());
 $('#tb-more').addEventListener('click', (e) => { e.stopPropagation(); toggleMore(); });
 document.addEventListener('click', (e) => { if (!e.target.closest('#more-menu, #tb-more')) closeMenus(); });
@@ -754,6 +784,8 @@ window.addEventListener('keydown', (e) => {
     case '0': view.fit(); break;
     case '1': view.zoomTo(1); break;
     case 'r': view.rotate(1); break;
+    case 'm': view.mirror(); break;
+    case 'M': view.flipVertical(); break;
     case 'R': view.rotate(-1); break;
     case 'f': case 'F': iv.fullscreen(); break;
     case 'Delete': deleteCurrent(); break;

@@ -13,6 +13,7 @@
 - **Recent files** — the start screen shows what you opened lately, with thumbnails.
 - **First-time setup** — offers to make ImgViewer your default image viewer on Windows.
 - **Print** — Ctrl+P (or ⋯ → Print) opens the Windows print dialog with the picture fitted to the page, turned to landscape automatically for wide photos.
+- **Mirror** — M (or the mirror button) flips the picture left ↔ right; Shift+M flips it upside down. Printing uses the mirrored view.
 - Rotate, full screen, copy image, show in folder, move to Recycle Bin.
 
 ## Keyboard
@@ -25,6 +26,7 @@
 | 1 | Actual size (100%) |
 | Double-click | Toggle fit ↔ 100% |
 | R / Shift+R | Rotate |
+| M / Shift+M | Mirror left ↔ right / flip upside down |
 | F or F11 | Full screen |
 | Ctrl+O | Open |
 | Ctrl+P | Print |

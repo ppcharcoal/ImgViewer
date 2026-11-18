@@ -235,6 +235,7 @@ body.idle .toolbar { opacity: 0; transform: translateY(14px); pointer-events: no
   transition: background .12s, color .12s;
 }
 .toolbar button:hover { background: rgb(255 255 255 / .08); color: var(--ink); }
+.toolbar button.on { color: var(--pink); background: rgb(243 112 181 / .12); }
 .toolbar button:disabled { opacity: .35; pointer-events: none; }
 .toolbar .zoom-label { min-width: 64px; font-weight: 600; font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; }
 .toolbar .sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 5px; }
